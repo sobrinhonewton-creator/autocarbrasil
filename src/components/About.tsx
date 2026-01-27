@@ -1,4 +1,5 @@
 import { Shield, Cpu, Wrench, Headphones } from "lucide-react";
+import programacaoVeicular from "@/assets/programacao-veicular.png";
 
 const About = () => {
   const features = [
@@ -54,24 +55,17 @@ const About = () => {
               orçamento até o funcionamento do veículo.
             </p>
 
-            <div className="pt-4">
-              <div className="flex items-center gap-4">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div 
-                      key={i}
-                      className="w-10 h-10 rounded-full bg-secondary border-2 border-background flex items-center justify-center"
-                    >
-                      <span className="text-xs font-bold text-muted-foreground">
-                        {i === 4 ? "+" : "👤"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="text-sm">
-                  <span className="font-semibold text-foreground">+500 clientes</span>
-                  <span className="text-muted-foreground"> confiam em nosso trabalho</span>
-                </div>
+            {/* Image for About Section */}
+            <div className="relative rounded-xl overflow-hidden mt-6">
+              <img 
+                src={programacaoVeicular} 
+                alt="Programação veicular especializada" 
+                className="w-full h-64 object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="text-sm font-medium text-foreground">Programação veicular especializada</p>
+                <p className="text-xs text-muted-foreground">Equipamentos de última geração</p>
               </div>
             </div>
           </div>
