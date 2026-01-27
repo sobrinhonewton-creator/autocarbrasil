@@ -1,13 +1,16 @@
-import { ArrowRight, Cpu, Gauge, Lock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import modulosEcu from "@/assets/modulos-ecu.png";
+import painelAutomotivo from "@/assets/painel-automotivo.png";
+import imobilizador from "@/assets/imobilizador.png";
 
 const Products = () => {
   const whatsappNumber = "5573981449671";
   
   const products = [
     {
-      icon: Cpu,
+      image: modulosEcu,
       title: "Módulos ECU",
       subtitle: "Injeção Eletrônica",
       description: "Unidades de controle do motor para todas as marcas e modelos. Programação e codificação por chassi inclusa.",
@@ -20,7 +23,7 @@ const Products = () => {
       features: ["Teste em bancada", "Garantia de funcionamento", "Compatibilidade verificada"]
     },
     {
-      icon: Gauge,
+      image: painelAutomotivo,
       title: "Painéis Automotivos",
       subtitle: "Instrumentação Eletrônica",
       description: "Painéis de instrumentos digitais e analógicos. Reprogramação de hodômetro e calibração de sensores.",
@@ -32,7 +35,7 @@ const Products = () => {
       features: ["Reset de quilometragem", "Reparação de display", "Codificação inclusa"]
     },
     {
-      icon: Lock,
+      image: imobilizador,
       title: "Imobilizadores",
       subtitle: "Sistemas Anti-furto",
       description: "Sistemas de imobilização e antifurto. Programação de chaves, transponders e módulos de conforto.",
@@ -71,17 +74,20 @@ const Products = () => {
 
         {/* Products Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product, index) => (
+          {products.map((product) => (
             <div 
               key={product.title}
-              className="card-technical flex flex-col h-full group"
+              className="card-technical flex flex-col h-full group overflow-hidden"
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:from-primary/30 transition-all">
-                  <product.icon className="w-7 h-7 text-primary" />
-                </div>
-                <div className="flex gap-1 flex-wrap justify-end">
+              {/* Product Image */}
+              <div className="relative h-48 -mx-6 -mt-6 mb-6 overflow-hidden">
+                <img 
+                  src={product.image} 
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 flex gap-1 flex-wrap">
                   {product.status.map((s) => (
                     <Badge key={s.label} variant={s.variant} className="text-xs">
                       {s.label}

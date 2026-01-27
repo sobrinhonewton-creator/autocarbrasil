@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoAutocar from "@/assets/logo-autocar.png";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,14 +35,12 @@ const Header = () => {
       <div className="container px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">A</span>
-            </div>
-            <div>
-              <span className="font-bold text-lg">AutoCar</span>
-              <span className="text-primary font-bold text-lg"> Brasil</span>
-            </div>
+          <a href="#" className="flex items-center">
+            <img 
+              src={logoAutocar} 
+              alt="AutoCar Brasil - Injeção Eletrônica" 
+              className="h-12 md:h-14 w-auto"
+            />
           </a>
 
           {/* Desktop Navigation */}

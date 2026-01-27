@@ -1,4 +1,5 @@
 import { MessageCircle, Instagram, Mail } from "lucide-react";
+import logoAutocar from "@/assets/logo-autocar.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -9,14 +10,12 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">A</span>
-              </div>
-              <div>
-                <span className="font-bold text-lg">AutoCar</span>
-                <span className="text-primary font-bold text-lg"> Brasil</span>
-              </div>
+            <div className="mb-4">
+              <img 
+                src={logoAutocar} 
+                alt="AutoCar Brasil - Injeção Eletrônica" 
+                className="h-14 w-auto"
+              />
             </div>
             <p className="text-muted-foreground text-sm max-w-sm leading-relaxed mb-4">
               Especialistas em módulos ECU, painéis automotivos e imobilizadores. 
