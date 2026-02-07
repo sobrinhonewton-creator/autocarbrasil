@@ -1,29 +1,26 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Filter, MessageCircle, X, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, ArrowRight, Filter, MessageCircle, X, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import {
-  products,
-  categories,
-  brands,
-  type ProductCategory,
-  type ProductStatus,
-  type ProductAvailability,
-} from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
+import { categories } from "@/data/products";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Product = Tables<"products">;
 
 const WHATSAPP_NUMBER = "5573981449671";
 
-const statusVariant = (s: ProductStatus) => {
+const statusVariant = (s: string) => {
   if (s === "Novo") return "default" as const;
   if (s === "Recondicionado") return "secondary" as const;
   return "outline" as const;
 };
 
-const availabilityColor = (a: ProductAvailability) => {
+const availabilityColor = (a: string) => {
   if (a === "Disponível") return "text-green-400";
   if (a === "Sob consulta") return "text-yellow-400";
   return "text-red-400";
@@ -33,18 +30,33 @@ const Catalog = () => {
   const { category } = useParams<{ category: string }>();
   const currentCategory = categories.find((c) => c.slug === category);
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [brandFilter, setBrandFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      let query = supabase.from("products").select("*").order("name");
+      if (category) query = query.eq("category", category);
+      const { data } = await query;
+      setProducts(data || []);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, [category]);
+
+  const brands = useMemo(() => [...new Set(products.map((p) => p.brand))].filter(Boolean).sort(), [products]);
+
   const filtered = useMemo(() => {
     return products.filter((p) => {
-      if (category && p.category !== category) return false;
       if (brandFilter !== "all" && p.brand !== brandFilter) return false;
       if (statusFilter !== "all" && p.status !== statusFilter) return false;
       return true;
     });
-  }, [category, brandFilter, statusFilter]);
+  }, [products, brandFilter, statusFilter]);
 
   const activeFilters = (brandFilter !== "all" ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
 
@@ -58,6 +70,12 @@ const Catalog = () => {
       ? `Olá, gostaria de verificar a compatibilidade de ${productName} para meu veículo.`
       : "Olá, gostaria de verificar a compatibilidade de um módulo para meu veículo.";
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  // Fallback images from static data
+  const getCategoryImage = (cat: string) => {
+    const found = categories.find((c) => c.slug === cat);
+    return found?.image || "";
   };
 
   return (
@@ -169,7 +187,11 @@ const Catalog = () => {
             )}
 
             {/* Products Grid */}
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="text-center py-20">
                 <Filter className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-medium mb-2">Nenhum produto encontrado</p>
@@ -186,7 +208,7 @@ const Catalog = () => {
                     {/* Image */}
                     <div className="relative h-40 -mx-6 -mt-6 mb-4 overflow-hidden">
                       <img
-                        src={product.image}
+                        src={product.image_url || getCategoryImage(product.category)}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
@@ -215,7 +237,7 @@ const Catalog = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Ano:</span>
-                          <span className="text-foreground">{product.yearRange}</span>
+                          <span className="text-foreground">{product.year_range}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Disponibilidade:</span>
