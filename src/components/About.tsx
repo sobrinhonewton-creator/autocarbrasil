@@ -1,5 +1,4 @@
 import { Shield, Cpu, Wrench, Headphones } from "lucide-react";
-import { motion } from "framer-motion";
 import programacaoVeicular from "@/assets/programacao-veicular.png";
 
 const About = () => {
@@ -31,7 +30,7 @@ const About = () => {
       <div className="container px-4">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
           {/* Text Content */}
-          <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="space-y-5 md:space-y-6">
+          <div className="space-y-5 md:space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
               <span className="text-[10px] md:text-xs font-semibold text-primary uppercase tracking-wider">
                 Sobre Nós
@@ -70,10 +69,10 @@ const About = () => {
                 <p className="text-[10px] md:text-xs text-muted-foreground">Equipamentos de última geração</p>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Features Grid */}
-          <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="grid grid-cols-2 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             {features.map((feature, index) => (
               <div 
                 key={feature.title}
@@ -89,7 +88,7 @@ const About = () => {
                 </p>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
