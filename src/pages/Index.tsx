@@ -7,6 +7,7 @@ import HowItWorks from "@/components/HowItWorks";
 import Trust from "@/components/Trust";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import BrandLogos from "@/components/BrandLogos";
 
 const Index = () => {
   return (
@@ -21,6 +22,7 @@ const Index = () => {
         <Trust />
         <Contact />
       </main>
+      <BrandLogos />
       <Footer />
     </div>
   );
