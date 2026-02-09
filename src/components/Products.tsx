@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -51,9 +52,9 @@ const Products = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {categories.map((cat) => (
+          {categories.map((cat, i) => (
+            <motion.div key={cat.slug} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.15 }}>
             <Link
-              key={cat.slug}
               to={`/catalogo/${cat.slug}`}
               className="card-technical flex flex-col h-full group overflow-hidden cursor-pointer p-0"
             >
@@ -119,6 +120,7 @@ const Products = () => {
                 </Button>
               </div>
             </Link>
+            </motion.div>
           ))}
         </div>
       </div>
