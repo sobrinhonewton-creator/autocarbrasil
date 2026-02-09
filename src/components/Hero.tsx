@@ -6,29 +6,28 @@ const Hero = () => {
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=Olá! Gostaria de verificar a compatibilidade de um módulo.`;
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+      <div className="absolute inset-0 bg-grid-pattern opacity-20" />
       
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
       
-      {/* Glow Effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+      {/* Glow Effect */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/8 rounded-full blur-[120px]" />
 
       <div className="container relative z-10 px-4 py-20 md:py-32">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
+        <div className="max-w-3xl mx-auto text-center space-y-8">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border">
-            <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-muted-foreground">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary border border-border">
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            <span className="text-xs font-medium text-muted-foreground tracking-wide">
               Especialistas em Eletrônica Automotiva
             </span>
           </div>
 
           {/* Main Title */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
             <span className="text-foreground">AutoCar Brasil</span>
             <br />
             <span className="text-gradient">Módulos ECU, Painéis</span>
@@ -37,64 +36,56 @@ const Hero = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Venda, programação e soluções em eletrônica automotiva para 
             oficinas e profissionais em todo o Brasil
           </p>
 
           {/* Features Pills */}
-          <div className="flex flex-wrap justify-center gap-3 pt-4">
+          <div className="flex flex-wrap justify-center gap-2 pt-2">
             {["Módulos Testados", "Programação Especializada", "Suporte Técnico"].map((feature) => (
               <div 
                 key={feature}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 border border-border/50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/60 border border-border/40"
               >
-                <CheckCircle className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">{feature}</span>
+                <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-medium text-muted-foreground">{feature}</span>
               </div>
             ))}
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
             <a href="#produtos" className="w-full sm:w-auto">
               <Button variant="hero" size="lg" className="w-full sm:w-auto">
                 Verificar Compatibilidade
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </a>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button variant="whatsapp" size="lg" className="w-full sm:w-auto">
-                <MessageCircle className="w-5 h-5" />
+                <MessageCircle className="w-4 h-4" />
                 Falar no WhatsApp
               </Button>
             </a>
           </div>
 
           {/* Trust Indicators */}
-          <div className="pt-12 flex items-center justify-center gap-8 text-muted-foreground">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">500+</div>
-              <div className="text-sm">Módulos Vendidos</div>
-            </div>
-            <div className="w-px h-10 bg-border" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">98%</div>
-              <div className="text-sm">Satisfação</div>
-            </div>
-            <div className="w-px h-10 bg-border" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">24h</div>
-              <div className="text-sm">Suporte</div>
-            </div>
+          <div className="pt-10 flex items-center justify-center gap-8 text-muted-foreground">
+            {[
+              { value: "500+", label: "Módulos Vendidos" },
+              { value: "98%", label: "Satisfação" },
+              { value: "24h", label: "Suporte" },
+            ].map((stat, i) => (
+              <div key={stat.label} className="flex items-center gap-8">
+                {i > 0 && <div className="w-px h-8 bg-border -ml-8" />}
+                <div className="text-center">
+                  <div className="text-xl font-bold text-foreground">{stat.value}</div>
+                  <div className="text-xs">{stat.label}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2">
-          <div className="w-1 h-3 bg-muted-foreground/50 rounded-full" />
         </div>
       </div>
     </section>
