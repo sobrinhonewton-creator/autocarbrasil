@@ -1,4 +1,5 @@
 import { Check, Zap, ShieldCheck, Truck, HeadphonesIcon, Settings } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Differentials = () => {
   const differentials = [
@@ -54,7 +55,7 @@ const Differentials = () => {
           </div>
 
           {/* Stats Card */}
-          <div className="relative">
+          <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }} className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl" />
             <div className="relative bg-card border border-border rounded-2xl p-6 md:p-10">
               <h3 className="text-xl md:text-2xl font-bold mb-6 md:mb-8">
@@ -79,7 +80,7 @@ const Differentials = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

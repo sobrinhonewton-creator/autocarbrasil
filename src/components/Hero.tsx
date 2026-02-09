@@ -1,5 +1,12 @@
 import { ArrowRight, MessageCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, delay, ease: "easeOut" as const },
+});
 
 const Hero = () => {
   const whatsappNumber = "5573981449671";
@@ -14,30 +21,30 @@ const Hero = () => {
       <div className="container relative z-10 px-4 py-16 md:py-32">
         <div className="max-w-3xl mx-auto text-center space-y-6 md:space-y-8">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full bg-secondary border border-border">
+          <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full bg-secondary border border-border">
             <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
             <span className="text-[10px] md:text-xs font-medium text-muted-foreground tracking-wide">
               Especialistas em Eletrônica Automotiva
             </span>
-          </div>
+          </motion.div>
 
           {/* Main Title */}
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
+          <motion.h1 {...fadeUp(0.15)} className="text-3xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
             <span className="text-foreground">AutoCar Brasil</span>
             <br />
             <span className="text-gradient">Módulos ECU, Painéis</span>
             <br />
             <span className="text-foreground">e Imobilizadores</span>
-          </h1>
+          </motion.h1>
 
           {/* Subtitle */}
-          <p className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed px-2">
+          <motion.p {...fadeUp(0.3)} className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed px-2">
             Venda, programação e soluções em eletrônica automotiva para 
             oficinas e profissionais em todo o Brasil
-          </p>
+          </motion.p>
 
           {/* Features Pills */}
-          <div className="flex flex-wrap justify-center gap-2 pt-1 md:pt-2">
+          <motion.div {...fadeUp(0.4)} className="flex flex-wrap justify-center gap-2 pt-1 md:pt-2">
             {["Módulos Testados", "Programação Especializada", "Suporte Técnico"].map((feature) => (
               <div 
                 key={feature}
@@ -47,7 +54,7 @@ const Hero = () => {
                 <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{feature}</span>
               </div>
             ))}
-          </div>
+          </motion.div>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 md:pt-4">
