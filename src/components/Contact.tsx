@@ -1,109 +1,110 @@
 import { MessageCircle, Instagram, Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const Contact = () => {
+  const { ref, isInView } = useScrollAnimation();
   const whatsappNumber = "5573981449671";
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=Olá! Gostaria de falar com um especialista.`;
 
   return (
-    <section id="contato" className="py-16 md:py-32 bg-secondary/30 relative">
+    <section id="contato" className="py-16 md:py-28 bg-secondary/20 relative" ref={ref}>
       <div className="container px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4 md:mb-6">
-              <span className="text-[10px] md:text-xs font-semibold text-primary uppercase tracking-wider">
-                Contato
-              </span>
-            </div>
-            <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-3 md:mb-4">
-              Fale com um <span className="text-gradient">Especialista</span>
-            </h2>
-            <p className="text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tire suas dúvidas e verifique a compatibilidade do módulo para seu veículo
-            </p>
+          <div className="text-center mb-10 md:mb-14">
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              className="inline-block text-[10px] md:text-xs font-semibold text-primary uppercase tracking-[0.2em] mb-3 md:mb-4"
+            >
+              Contato
+            </motion.span>
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-2xl md:text-4xl font-bold tracking-tight mb-3"
+            >
+              Fale com um Especialista
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.2 }}
+              className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto"
+            >
+              Tire dúvidas e verifique a compatibilidade do módulo para seu veículo
+            </motion.p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 md:gap-8">
-            {/* Contact Info */}
-            <div className="space-y-3 md:space-y-6">
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                className="card-technical flex items-center gap-3 md:gap-4 group cursor-pointer p-4 md:p-6">
-                <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-[#25D366]/20 flex items-center justify-center group-hover:bg-[#25D366]/30 transition-colors flex-shrink-0">
-                  <MessageCircle className="w-5 md:w-7 h-5 md:h-7 text-[#25D366]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm md:text-base mb-0.5">WhatsApp</div>
-                  <div className="text-muted-foreground text-xs md:text-sm">+55 73 98144-9671</div>
-                </div>
-                <ArrowRight className="w-4 md:w-5 h-4 md:h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all flex-shrink-0" />
-              </a>
+          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -16 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="space-y-3"
+            >
+              {[
+                { href: whatsappLink, icon: MessageCircle, iconBg: "bg-[#25D366]/15", iconColor: "text-[#25D366]", label: "WhatsApp", detail: "+55 73 98144-9671", external: true },
+                { href: "https://instagram.com/auto.car_brasil", icon: Instagram, iconBg: "bg-[#E4405F]/15", iconColor: "text-[#E4405F]", label: "Instagram", detail: "@auto.car_brasil", external: true },
+                { href: "mailto:getbrautocar@gmail.com", icon: Mail, iconBg: "bg-primary/10", iconColor: "text-primary", label: "Email", detail: "getbrautocar@gmail.com", external: false },
+                { href: null, icon: MapPin, iconBg: "bg-accent/10", iconColor: "text-accent", label: "Atendimento", detail: "Todo o Brasil via envio", external: false },
+              ].map((item) => {
+                const Wrapper = item.href ? "a" : "div";
+                const wrapperProps = item.href ? {
+                  href: item.href,
+                  ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}),
+                } : {};
 
-              <a href="https://instagram.com/auto.car_brasil" target="_blank" rel="noopener noreferrer"
-                className="card-technical flex items-center gap-3 md:gap-4 group cursor-pointer p-4 md:p-6">
-                <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-gradient-to-br from-[#833AB4]/20 via-[#FD1D1D]/20 to-[#F77737]/20 flex items-center justify-center flex-shrink-0">
-                  <Instagram className="w-5 md:w-7 h-5 md:h-7 text-[#E4405F]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm md:text-base mb-0.5">Instagram</div>
-                  <div className="text-muted-foreground text-xs md:text-sm">@auto.car_brasil</div>
-                </div>
-                <ArrowRight className="w-4 md:w-5 h-4 md:h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all flex-shrink-0" />
-              </a>
+                return (
+                  <Wrapper
+                    key={item.label}
+                    {...wrapperProps}
+                    className={`flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 ${item.href ? "hover:border-primary/20 cursor-pointer" : ""} transition-colors group`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg ${item.iconBg} flex items-center justify-center flex-shrink-0`}>
+                      <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm">{item.label}</div>
+                      <div className="text-muted-foreground text-xs truncate">{item.detail}</div>
+                    </div>
+                    {item.href && <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all flex-shrink-0" />}
+                  </Wrapper>
+                );
+              })}
+            </motion.div>
 
-              <a href="mailto:getbrautocar@gmail.com"
-                className="card-technical flex items-center gap-3 md:gap-4 group cursor-pointer p-4 md:p-6">
-                <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
-                  <Mail className="w-5 md:w-7 h-5 md:h-7 text-primary" />
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-card border border-border/60 rounded-2xl p-6 md:p-8 flex flex-col justify-center"
+            >
+              <div className="text-center">
+                <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center mb-4 md:mb-5">
+                  <Phone className="w-7 h-7 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm md:text-base mb-0.5">Email</div>
-                  <div className="text-muted-foreground text-xs md:text-sm truncate">getbrautocar@gmail.com</div>
-                </div>
-                <ArrowRight className="w-4 md:w-5 h-4 md:h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all flex-shrink-0" />
-              </a>
+                
+                <h3 className="text-lg md:text-xl font-bold mb-2">Atendimento Imediato</h3>
+                
+                <p className="text-muted-foreground text-xs md:text-sm mb-5 max-w-sm mx-auto">
+                  Equipe técnica pronta para ajudar com compatibilidade e dúvidas sobre instalação
+                </p>
+                
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                  <Button variant="whatsapp" size="lg" className="w-full text-sm md:text-base py-5">
+                    <MessageCircle className="w-5 h-5" />
+                    Falar com especialista
+                  </Button>
+                </a>
 
-              <div className="card-technical flex items-center gap-3 md:gap-4 p-4 md:p-6">
-                <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 md:w-7 h-5 md:h-7 text-accent" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm md:text-base mb-0.5">Atendimento</div>
-                  <div className="text-muted-foreground text-xs md:text-sm">Todo o Brasil via envio</div>
-                </div>
+                <p className="text-[10px] text-muted-foreground/60 mt-3">
+                  Resposta rápida • Suporte técnico especializado
+                </p>
               </div>
-            </div>
-
-            {/* CTA Card */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-2xl blur-2xl" />
-              <div className="relative h-full bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col justify-center">
-                <div className="text-center">
-                  <div className="w-16 md:w-20 h-16 md:h-20 mx-auto rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center mb-4 md:mb-6">
-                    <Phone className="w-8 md:w-10 h-8 md:h-10 text-white" />
-                  </div>
-                  
-                  <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">
-                    Atendimento Imediato
-                  </h3>
-                  
-                  <p className="text-muted-foreground text-xs md:text-sm mb-6 md:mb-8 max-w-sm mx-auto">
-                    Nossa equipe técnica está pronta para ajudar com a verificação 
-                    de compatibilidade e dúvidas sobre instalação
-                  </p>
-                  
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    <Button variant="whatsapp" size="lg" className="w-full text-sm md:text-lg py-5 md:py-6">
-                      <MessageCircle className="w-5 md:w-6 h-5 md:h-6" />
-                      Falar agora com um especialista
-                    </Button>
-                  </a>
-
-                  <p className="text-[10px] md:text-xs text-muted-foreground mt-3 md:mt-4">
-                    Resposta rápida • Suporte técnico especializado
-                  </p>
-                </div>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
