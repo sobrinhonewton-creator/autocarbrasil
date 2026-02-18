@@ -16,44 +16,68 @@ export type Database = {
     Tables: {
       products: {
         Row: {
+          additional_images: string[] | null
           availability: string
           brand: string
           category: string
           compatibility: string
           created_at: string
           description: string
+          full_description: string | null
           id: string
           image_url: string | null
+          is_active: boolean | null
           name: string
+          price: number | null
+          promo_price: number | null
+          sku: string | null
           status: string
+          stock: number | null
+          tags: string[] | null
           updated_at: string
           year_range: string
         }
         Insert: {
+          additional_images?: string[] | null
           availability?: string
           brand?: string
           category: string
           compatibility?: string
           created_at?: string
           description?: string
+          full_description?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           name: string
+          price?: number | null
+          promo_price?: number | null
+          sku?: string | null
           status?: string
+          stock?: number | null
+          tags?: string[] | null
           updated_at?: string
           year_range?: string
         }
         Update: {
+          additional_images?: string[] | null
           availability?: string
           brand?: string
           category?: string
           compatibility?: string
           created_at?: string
           description?: string
+          full_description?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           name?: string
+          price?: number | null
+          promo_price?: number | null
+          sku?: string | null
           status?: string
+          stock?: number | null
+          tags?: string[] | null
           updated_at?: string
           year_range?: string
         }
