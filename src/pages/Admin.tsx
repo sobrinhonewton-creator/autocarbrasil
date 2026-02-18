@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Pencil, Trash2, LogOut, ArrowLeft, Upload, Loader2, Package,
+  Plus, Pencil, Trash2, LogOut, ArrowLeft, Loader2, Package, Search, ChevronLeft, ChevronRight, Eye, EyeOff,
 } from "lucide-react";
-import logoAutocar from "@/assets/logo-autocar.png";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import AdminHeader from "@/components/admin/AdminHeader";
+import ProductFormDialog from "@/components/admin/ProductFormDialog";
+import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
 
@@ -25,17 +26,7 @@ const CATEGORIES = [
   { value: "imobilizadores", label: "Imobilizadores" },
 ];
 
-const emptyProduct: TablesInsert<"products"> = {
-  name: "",
-  description: "",
-  compatibility: "",
-  brand: "",
-  year_range: "",
-  status: "Novo",
-  availability: "Disponível",
-  category: "ecu",
-  image_url: null,
-};
+const ITEMS_PER_PAGE = 15;
 
 const Admin = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -47,10 +38,9 @@ const Admin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState<TablesInsert<"products">>(emptyProduct);
-  const [saving, setSaving] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -71,78 +61,33 @@ const Admin = () => {
     setFetching(false);
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("product-images")
-      .upload(path, file);
-    if (error) {
-      toast({ variant: "destructive", title: "Erro ao enviar imagem", description: error.message });
-      return null;
+  const filtered = useMemo(() => {
+    let items = products;
+    if (filterCategory !== "all") items = items.filter((p) => p.category === filterCategory);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter((p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        ((p as any).sku || "").toLowerCase().includes(q)
+      );
     }
-    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-    return data.publicUrl;
-  };
+    return items;
+  }, [products, filterCategory, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  useEffect(() => { setCurrentPage(1); }, [filterCategory, searchQuery]);
 
   const openCreate = () => {
     setEditingProduct(null);
-    setForm(emptyProduct);
-    setImageFile(null);
     setDialogOpen(true);
   };
 
   const openEdit = (product: Product) => {
     setEditingProduct(product);
-    setForm({
-      name: product.name,
-      description: product.description,
-      compatibility: product.compatibility,
-      brand: product.brand,
-      year_range: product.year_range,
-      status: product.status,
-      availability: product.availability,
-      category: product.category,
-      image_url: product.image_url,
-    });
-    setImageFile(null);
     setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!form.name || !form.category) return;
-    setSaving(true);
-
-    let imageUrl = form.image_url;
-    if (imageFile) {
-      const url = await uploadImage(imageFile);
-      if (url) imageUrl = url;
-    }
-
-    const payload = { ...form, image_url: imageUrl };
-
-    if (editingProduct) {
-      const { error } = await supabase
-        .from("products")
-        .update(payload as TablesUpdate<"products">)
-        .eq("id", editingProduct.id);
-      if (error) {
-        toast({ variant: "destructive", title: "Erro", description: error.message });
-      } else {
-        toast({ title: "Produto atualizado!" });
-      }
-    } else {
-      const { error } = await supabase.from("products").insert(payload);
-      if (error) {
-        toast({ variant: "destructive", title: "Erro", description: error.message });
-      } else {
-        toast({ title: "Produto criado!" });
-      }
-    }
-
-    setSaving(false);
-    setDialogOpen(false);
-    fetchProducts();
   };
 
   const handleDelete = async () => {
@@ -158,9 +103,12 @@ const Admin = () => {
     fetchProducts();
   };
 
-  const filtered = filterCategory === "all"
-    ? products
-    : products.filter((p) => p.category === filterCategory);
+  const toggleActive = async (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newVal = !(product as any).is_active;
+    await supabase.from("products").update({ is_active: newVal } as any).eq("id", product.id);
+    fetchProducts();
+  };
 
   if (loading) {
     return (
@@ -194,28 +142,23 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <img src={logoAutocar} alt="AutoCar" className="h-8" />
-            <span className="text-sm font-semibold">Admin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-4 h-4" /> Site
-            </Button>
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4" /> Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AdminHeader />
 
       <main className="container px-4 py-8">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <h1 className="text-2xl font-bold mr-auto">Catálogo</h1>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por nome ou SKU..."
+              className="pl-9 w-[220px]"
+            />
+          </div>
+
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Categoria" />
@@ -227,9 +170,30 @@ const Admin = () => {
               ))}
             </SelectContent>
           </Select>
+
           <Button onClick={openCreate}>
             <Plus className="w-4 h-4" /> Novo produto
           </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="card-technical py-3 px-4 text-center">
+            <p className="text-2xl font-bold text-primary">{products.length}</p>
+            <p className="text-xs text-muted-foreground">Total</p>
+          </div>
+          <div className="card-technical py-3 px-4 text-center">
+            <p className="text-2xl font-bold text-green-400">{products.filter((p) => (p as any).is_active !== false).length}</p>
+            <p className="text-xs text-muted-foreground">Ativos</p>
+          </div>
+          <div className="card-technical py-3 px-4 text-center">
+            <p className="text-2xl font-bold text-yellow-400">{products.filter((p) => (p as any).stock === 0).length}</p>
+            <p className="text-xs text-muted-foreground">Sem estoque</p>
+          </div>
+          <div className="card-technical py-3 px-4 text-center">
+            <p className="text-2xl font-bold text-muted-foreground">{filtered.length}</p>
+            <p className="text-xs text-muted-foreground">Filtrados</p>
+          </div>
         </div>
 
         {/* Products Table */}
@@ -237,173 +201,117 @@ const Admin = () => {
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : paginated.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             Nenhum produto encontrado.
           </div>
         ) : (
-          <div className="grid gap-3">
-            {filtered.map((product) => (
-              <div
-                key={product.id}
-                className="card-technical flex items-center gap-4 cursor-pointer hover:border-primary/50"
-                onClick={() => openEdit(product)}
-              >
-                {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-14 h-14 rounded object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded bg-secondary flex items-center justify-center flex-shrink-0">
-                    <Package className="w-6 h-6 text-muted-foreground" />
+          <>
+            <div className="grid gap-2">
+              {paginated.map((product) => {
+                const isActive = (product as any).is_active !== false;
+                const price = (product as any).price;
+                const stock = (product as any).stock;
+                return (
+                  <div
+                    key={product.id}
+                    className={`card-technical flex items-center gap-4 cursor-pointer hover:border-primary/50 py-3 px-4 ${!isActive ? "opacity-50" : ""}`}
+                    onClick={() => openEdit(product)}
+                  >
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-12 h-12 rounded object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded bg-secondary flex items-center justify-center flex-shrink-0">
+                        <Package className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{product.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {product.brand} • {product.compatibility}
+                        {(product as any).sku ? ` • SKU: ${(product as any).sku}` : ""}
+                      </p>
+                    </div>
+
+                    {price > 0 && (
+                      <span className="text-sm font-semibold text-primary hidden md:inline">
+                        R$ {Number(price).toFixed(2)}
+                      </span>
+                    )}
+
+                    <span className="text-xs text-muted-foreground hidden sm:inline">
+                      Est: {stock ?? 0}
+                    </span>
+
+                    <Badge variant="secondary" className="text-[10px] hidden lg:inline-flex">
+                      {CATEGORIES.find((c) => c.value === product.category)?.label}
+                    </Badge>
+
+                    <Badge
+                      variant={product.status === "Novo" ? "default" : product.status === "Recondicionado" ? "secondary" : "outline"}
+                      className="text-[10px]"
+                    >
+                      {product.status}
+                    </Badge>
+
+                    <button
+                      onClick={(e) => toggleActive(product, e)}
+                      className="p-1.5 rounded hover:bg-secondary transition-colors"
+                      title={isActive ? "Desativar" : "Ativar"}
+                    >
+                      {isActive ? <Eye className="w-4 h-4 text-green-400" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                    </button>
+
+                    <Pencil className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{product.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {product.brand} • {product.compatibility}
-                  </p>
-                </div>
-                <Badge variant="secondary" className="text-[10px] hidden sm:inline-flex">
-                  {CATEGORIES.find((c) => c.value === product.category)?.label}
-                </Badge>
-                <Badge
-                  variant={product.status === "Novo" ? "default" : product.status === "Recondicionado" ? "secondary" : "outline"}
-                  className="text-[10px]"
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
                 >
-                  {product.status}
-                </Badge>
-                <Pencil className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </main>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingProduct ? "Editar Produto" : "Novo Produto"}</DialogTitle>
-            <DialogDescription>
-              Preencha os dados técnicos do produto.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div>
-              <Label>Nome *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Categoria *</Label>
-                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Marca</Label>
-                <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-              </div>
-            </div>
-
-            <div>
-              <Label>Descrição</Label>
-              <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-
-            <div>
-              <Label>Compatibilidade</Label>
-              <Input value={form.compatibility} onChange={(e) => setForm({ ...form, compatibility: e.target.value })} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Ano</Label>
-                <Input value={form.year_range} onChange={(e) => setForm({ ...form, year_range: e.target.value })} />
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Novo">Novo</SelectItem>
-                    <SelectItem value="Recondicionado">Recondicionado</SelectItem>
-                    <SelectItem value="Programado">Programado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label>Disponibilidade</Label>
-              <Select value={form.availability} onValueChange={(v) => setForm({ ...form, availability: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Disponível">Disponível</SelectItem>
-                  <SelectItem value="Sob consulta">Sob consulta</SelectItem>
-                  <SelectItem value="Indisponível">Indisponível</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Imagem do produto</Label>
-              <div className="flex items-center gap-3 mt-1">
-                {(form.image_url || imageFile) && (
-                  <img
-                    src={imageFile ? URL.createObjectURL(imageFile) : form.image_url!}
-                    alt="Preview"
-                    className="w-16 h-16 rounded object-cover"
-                  />
-                )}
-                <label className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-input text-sm text-muted-foreground hover:bg-secondary transition-colors">
-                    <Upload className="w-4 h-4" />
-                    {imageFile ? imageFile.name : "Escolher imagem"}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="flex gap-2">
-            {editingProduct && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => {
-                  setDialogOpen(false);
-                  setDeleteDialogOpen(true);
-                }}
-              >
-                <Trash2 className="w-4 h-4" /> Excluir
-              </Button>
-            )}
-            <div className="flex-1" />
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={saving || !form.name}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {editingProduct ? "Salvar" : "Criar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProductFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editingProduct={editingProduct}
+        onSaved={fetchProducts}
+        onDeleteRequest={(product) => {
+          setEditingProduct(product);
+          setDeleteDialogOpen(true);
+        }}
+      />
 
       {/* Delete Confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

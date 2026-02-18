@@ -39,7 +39,7 @@ const Catalog = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      let query = supabase.from("products").select("*").order("name");
+      let query = supabase.from("products").select("*").eq("is_active", true).order("name");
       if (category) query = query.eq("category", category);
       const { data } = await query;
       setProducts(data || []);
@@ -224,7 +224,27 @@ const Catalog = () => {
                     {/* Content */}
                     <div className="flex-1">
                       <h3 className="font-bold text-sm mb-1 leading-tight">{product.name}</h3>
-                      <p className="text-muted-foreground text-xs leading-relaxed mb-3">{product.description}</p>
+                      <p className="text-muted-foreground text-xs leading-relaxed mb-2">{product.description}</p>
+
+                      {/* Price */}
+                      {(product as any).price > 0 && (
+                        <div className="flex items-baseline gap-2 mb-2">
+                          {(product as any).promo_price ? (
+                            <>
+                              <span className="text-lg font-bold text-primary">
+                                R$ {Number((product as any).promo_price).toFixed(2)}
+                              </span>
+                              <span className="text-xs text-muted-foreground line-through">
+                                R$ {Number((product as any).price).toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-lg font-bold text-primary">
+                              R$ {Number((product as any).price).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       <div className="space-y-1.5 text-xs">
                         <div className="flex justify-between">
