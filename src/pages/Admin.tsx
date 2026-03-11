@@ -105,8 +105,8 @@ const Admin = () => {
 
   const toggleActive = async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
-    const newVal = !(product as any).is_active;
-    await supabase.from("products").update({ is_active: newVal } as any).eq("id", product.id);
+    const newVal = !product.is_active;
+    await supabase.from("products").update({ is_active: newVal }).eq("id", product.id);
     fetchProducts();
   };
 
