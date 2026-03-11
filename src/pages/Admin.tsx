@@ -209,9 +209,9 @@ const Admin = () => {
           <>
             <div className="grid gap-2">
               {paginated.map((product) => {
-                const isActive = (product as any).is_active !== false;
-                const price = (product as any).price;
-                const stock = (product as any).stock;
+    const isActive = product.is_active !== false;
+                const price = product.price;
+                const stock = product.stock;
                 return (
                   <div
                     key={product.id}
