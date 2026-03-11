@@ -234,7 +234,7 @@ const Admin = () => {
                       <p className="font-semibold text-sm truncate">{product.name}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {product.brand} • {product.compatibility}
-                        {(product as any).sku ? ` • SKU: ${(product as any).sku}` : ""}
+                        {product.sku ? ` • SKU: ${product.sku}` : ""}
                       </p>
                     </div>
 
