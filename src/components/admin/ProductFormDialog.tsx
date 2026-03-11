@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,18 +22,33 @@ const CATEGORIES = [
   { value: "imobilizadores", label: "Imobilizadores" },
 ];
 
-export const emptyProduct: TablesInsert<"products"> & {
-  price?: number;
-  promo_price?: number | null;
-  stock?: number;
-  sku?: string;
-  tags?: string[];
-  full_description?: string;
-  is_active?: boolean;
-  additional_images?: string[];
-} = {
+// Zod schema for product validation
+const productSchema = z.object({
+  name: z.string().trim().min(1, "Nome é obrigatório").max(255, "Nome muito longo"),
+  description: z.string().max(1000).default(""),
+  full_description: z.string().max(10000).default(""),
+  compatibility: z.string().max(500).default(""),
+  brand: z.string().max(100).default(""),
+  year_range: z.string().max(50).default(""),
+  status: z.enum(["Novo", "Recondicionado", "Programado"]).default("Novo"),
+  availability: z.enum(["Disponível", "Sob consulta", "Indisponível"]).default("Disponível"),
+  category: z.string().min(1, "Categoria é obrigatória"),
+  image_url: z.string().nullable().default(null),
+  price: z.number().min(0, "Preço não pode ser negativo").default(0),
+  promo_price: z.number().min(0).nullable().default(null),
+  stock: z.number().int().min(0, "Estoque não pode ser negativo").default(0),
+  sku: z.string().max(100).default(""),
+  tags: z.array(z.string()).default([]),
+  is_active: z.boolean().default(true),
+  additional_images: z.array(z.string()).default([]),
+});
+
+type ProductForm = z.infer<typeof productSchema>;
+
+const defaultForm: ProductForm = {
   name: "",
   description: "",
+  full_description: "",
   compatibility: "",
   brand: "",
   year_range: "",
@@ -45,7 +61,6 @@ export const emptyProduct: TablesInsert<"products"> & {
   stock: 0,
   sku: "",
   tags: [],
-  full_description: "",
   is_active: true,
   additional_images: [],
 };
@@ -60,15 +75,16 @@ interface ProductFormDialogProps {
 
 const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDeleteRequest }: ProductFormDialogProps) => {
   const { toast } = useToast();
-  const [form, setForm] = useState<any>(emptyProduct);
+  const [form, setForm] = useState<ProductForm>({ ...defaultForm });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
   const [tagInput, setTagInput] = useState("");
 
-  // Sync form when editingProduct or open changes
   useEffect(() => {
     if (!open) return;
+    setErrors({});
     if (editingProduct) {
       setForm({
         name: editingProduct.name,
@@ -76,21 +92,21 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
         compatibility: editingProduct.compatibility,
         brand: editingProduct.brand,
         year_range: editingProduct.year_range,
-        status: editingProduct.status,
-        availability: editingProduct.availability,
+        status: editingProduct.status as ProductForm["status"],
+        availability: editingProduct.availability as ProductForm["availability"],
         category: editingProduct.category,
         image_url: editingProduct.image_url,
-        price: (editingProduct as any).price || 0,
-        promo_price: (editingProduct as any).promo_price || null,
-        stock: (editingProduct as any).stock || 0,
-        sku: (editingProduct as any).sku || "",
-        tags: (editingProduct as any).tags || [],
-        full_description: (editingProduct as any).full_description || "",
-        is_active: (editingProduct as any).is_active ?? true,
-        additional_images: (editingProduct as any).additional_images || [],
+        price: editingProduct.price ?? 0,
+        promo_price: editingProduct.promo_price ?? null,
+        stock: editingProduct.stock ?? 0,
+        sku: editingProduct.sku ?? "",
+        tags: editingProduct.tags ?? [],
+        full_description: editingProduct.full_description ?? "",
+        is_active: editingProduct.is_active ?? true,
+        additional_images: editingProduct.additional_images ?? [],
       });
     } else {
-      setForm({ ...emptyProduct });
+      setForm({ ...defaultForm });
     }
     setImageFile(null);
     setAdditionalFiles([]);
@@ -110,82 +126,100 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.category) return;
+    // Validate with zod
+    const result = productSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((e) => {
+        const field = e.path[0]?.toString();
+        if (field) fieldErrors[field] = e.message;
+      });
+      setErrors(fieldErrors);
+      toast({ variant: "destructive", title: "Erro de validação", description: "Verifique os campos obrigatórios." });
+      return;
+    }
+
+    setErrors({});
     setSaving(true);
 
-    let imageUrl = form.image_url;
-    if (imageFile) {
-      const url = await uploadImage(imageFile);
-      if (url) imageUrl = url;
-    }
-
-    // Upload additional images
-    let additionalUrls = [...(form.additional_images || [])];
-    for (const file of additionalFiles) {
-      const url = await uploadImage(file);
-      if (url) additionalUrls.push(url);
-    }
-
-    const payload = {
-      name: form.name,
-      description: form.description,
-      compatibility: form.compatibility,
-      brand: form.brand,
-      year_range: form.year_range,
-      status: form.status,
-      availability: form.availability,
-      category: form.category,
-      image_url: imageUrl,
-      price: Number(form.price) || 0,
-      promo_price: form.promo_price ? Number(form.promo_price) : null,
-      stock: Number(form.stock) || 0,
-      sku: form.sku || "",
-      tags: form.tags || [],
-      full_description: form.full_description || "",
-      is_active: form.is_active ?? true,
-      additional_images: additionalUrls,
-    };
-
-    if (editingProduct) {
-      const { error } = await supabase
-        .from("products")
-        .update(payload as TablesUpdate<"products">)
-        .eq("id", editingProduct.id);
-      if (error) {
-        toast({ variant: "destructive", title: "Erro", description: error.message });
-      } else {
-        toast({ title: "Produto atualizado!" });
+    try {
+      let imageUrl = form.image_url;
+      if (imageFile) {
+        const url = await uploadImage(imageFile);
+        if (url) imageUrl = url;
       }
-    } else {
-      const { error } = await supabase.from("products").insert(payload as any);
-      if (error) {
-        toast({ variant: "destructive", title: "Erro", description: error.message });
-      } else {
-        toast({ title: "Produto criado!" });
-      }
-    }
 
-    setSaving(false);
-    onOpenChange(false);
-    onSaved();
+      // Upload additional images
+      const additionalUrls = [...(form.additional_images || [])];
+      for (const file of additionalFiles) {
+        const url = await uploadImage(file);
+        if (url) additionalUrls.push(url);
+      }
+
+      const validated = result.data;
+      const payload: TablesInsert<"products"> = {
+        name: validated.name,
+        description: validated.description,
+        compatibility: validated.compatibility,
+        brand: validated.brand,
+        year_range: validated.year_range,
+        status: validated.status,
+        availability: validated.availability,
+        category: validated.category,
+        image_url: imageUrl,
+        price: validated.price,
+        promo_price: validated.promo_price,
+        stock: validated.stock,
+        sku: validated.sku,
+        tags: validated.tags,
+        full_description: validated.full_description,
+        is_active: validated.is_active,
+        additional_images: additionalUrls,
+      };
+
+      if (editingProduct) {
+        const { error } = await supabase
+          .from("products")
+          .update(payload as TablesUpdate<"products">)
+          .eq("id", editingProduct.id);
+        if (error) throw error;
+        toast({ title: "Produto atualizado com sucesso!" });
+      } else {
+        const { error } = await supabase.from("products").insert(payload);
+        if (error) throw error;
+        toast({ title: "Produto criado com sucesso!" });
+      }
+
+      onOpenChange(false);
+      onSaved();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Erro ao salvar", description: err?.message || "Erro desconhecido" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addTag = () => {
     const tag = tagInput.trim();
-    if (tag && !(form.tags || []).includes(tag)) {
-      setForm({ ...form, tags: [...(form.tags || []), tag] });
+    if (tag && !form.tags.includes(tag)) {
+      setForm({ ...form, tags: [...form.tags, tag] });
     }
     setTagInput("");
   };
 
   const removeTag = (tag: string) => {
-    setForm({ ...form, tags: (form.tags || []).filter((t: string) => t !== tag) });
+    setForm({ ...form, tags: form.tags.filter((t) => t !== tag) });
   };
 
   const removeAdditionalImage = (index: number) => {
-    const imgs = [...(form.additional_images || [])];
+    const imgs = [...form.additional_images];
     imgs.splice(index, 1);
     setForm({ ...form, additional_images: imgs });
+  };
+
+  const updateField = <K extends keyof ProductForm>(key: K, value: ProductForm[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   return (
@@ -201,11 +235,16 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
               <Label>Nome *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                className={errors.name ? "border-destructive" : ""}
+              />
+              {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
             </div>
             <div>
               <Label>SKU</Label>
-              <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="Código interno" />
+              <Input value={form.sku} onChange={(e) => updateField("sku", e.target.value)} placeholder="Código interno" />
             </div>
           </div>
 
@@ -213,25 +252,28 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Categoria *</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
+                <SelectTrigger className={errors.category ? "border-destructive" : ""}>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => (
                     <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {errors.category && <p className="text-xs text-destructive mt-1">{errors.category}</p>}
             </div>
             <div>
               <Label>Marca</Label>
-              <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
+              <Input value={form.brand} onChange={(e) => updateField("brand", e.target.value)} />
             </div>
           </div>
 
           {/* Description */}
           <div>
             <Label>Descrição curta</Label>
-            <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <Input value={form.description} onChange={(e) => updateField("description", e.target.value)} />
           </div>
 
           {/* Full description */}
@@ -239,7 +281,7 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
             <Label>Descrição completa</Label>
             <Textarea
               value={form.full_description}
-              onChange={(e) => setForm({ ...form, full_description: e.target.value })}
+              onChange={(e) => updateField("full_description", e.target.value)}
               placeholder="Descrição detalhada do produto..."
               rows={4}
             />
@@ -248,7 +290,7 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
           {/* Compatibility */}
           <div>
             <Label>Compatibilidade</Label>
-            <Input value={form.compatibility} onChange={(e) => setForm({ ...form, compatibility: e.target.value })} />
+            <Input value={form.compatibility} onChange={(e) => updateField("compatibility", e.target.value)} />
           </div>
 
           {/* Price + Promo Price */}
@@ -260,8 +302,10 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
                 step="0.01"
                 min="0"
                 value={form.price || ""}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                onChange={(e) => updateField("price", Number(e.target.value) || 0)}
+                className={errors.price ? "border-destructive" : ""}
               />
+              {errors.price && <p className="text-xs text-destructive mt-1">{errors.price}</p>}
             </div>
             <div>
               <Label>Preço promocional (R$)</Label>
@@ -269,8 +313,8 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
                 type="number"
                 step="0.01"
                 min="0"
-                value={form.promo_price || ""}
-                onChange={(e) => setForm({ ...form, promo_price: e.target.value || null })}
+                value={form.promo_price ?? ""}
+                onChange={(e) => updateField("promo_price", e.target.value ? Number(e.target.value) : null)}
                 placeholder="Opcional"
               />
             </div>
@@ -284,16 +328,18 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
                 type="number"
                 min="0"
                 value={form.stock || ""}
-                onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                onChange={(e) => updateField("stock", Number(e.target.value) || 0)}
+                className={errors.stock ? "border-destructive" : ""}
               />
+              {errors.stock && <p className="text-xs text-destructive mt-1">{errors.stock}</p>}
             </div>
             <div>
               <Label>Ano</Label>
-              <Input value={form.year_range} onChange={(e) => setForm({ ...form, year_range: e.target.value })} />
+              <Input value={form.year_range} onChange={(e) => updateField("year_range", e.target.value)} />
             </div>
             <div>
               <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+              <Select value={form.status} onValueChange={(v) => updateField("status", v as ProductForm["status"])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Novo">Novo</SelectItem>
@@ -308,7 +354,7 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
           <div className="grid grid-cols-2 gap-3 items-end">
             <div>
               <Label>Disponibilidade</Label>
-              <Select value={form.availability} onValueChange={(v) => setForm({ ...form, availability: v })}>
+              <Select value={form.availability} onValueChange={(v) => updateField("availability", v as ProductForm["availability"])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Disponível">Disponível</SelectItem>
@@ -319,8 +365,8 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
             </div>
             <div className="flex items-center gap-3 pb-1">
               <Switch
-                checked={form.is_active ?? true}
-                onCheckedChange={(checked) => setForm({ ...form, is_active: checked })}
+                checked={form.is_active}
+                onCheckedChange={(checked) => updateField("is_active", checked)}
               />
               <Label className="mb-0">Produto ativo</Label>
             </div>
@@ -341,9 +387,9 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
-            {(form.tags || []).length > 0 && (
+            {form.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {(form.tags || []).map((tag: string) => (
+                {form.tags.map((tag) => (
                   <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-xs">
                     {tag}
                     <button onClick={() => removeTag(tag)} className="hover:text-destructive">
@@ -385,7 +431,7 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
           <div>
             <Label>Imagens adicionais</Label>
             <div className="flex flex-wrap gap-2 mt-1">
-              {(form.additional_images || []).map((url: string, i: number) => (
+              {form.additional_images.map((url, i) => (
                 <div key={i} className="relative group">
                   <img src={url} alt="" className="w-16 h-16 rounded object-cover" />
                   <button
