@@ -183,7 +183,7 @@ const Admin = () => {
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
-            <p className="text-2xl font-bold text-green-400">{products.filter((p) => (p as any).is_active !== false).length}</p>
+            <p className="text-2xl font-bold text-green-400">{products.filter((p) => p.is_active !== false).length}</p>
             <p className="text-xs text-muted-foreground">Ativos</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
