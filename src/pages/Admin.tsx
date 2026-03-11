@@ -69,7 +69,7 @@ const Admin = () => {
       items = items.filter((p) =>
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
-        ((p as any).sku || "").toLowerCase().includes(q)
+        (p.sku || "").toLowerCase().includes(q)
       );
     }
     return items;
