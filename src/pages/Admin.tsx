@@ -187,7 +187,7 @@ const Admin = () => {
             <p className="text-xs text-muted-foreground">Ativos</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
-            <p className="text-2xl font-bold text-yellow-400">{products.filter((p) => (p as any).stock === 0).length}</p>
+            <p className="text-2xl font-bold text-yellow-400">{products.filter((p) => p.stock === 0).length}</p>
             <p className="text-xs text-muted-foreground">Sem estoque</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
