@@ -69,7 +69,7 @@ const Admin = () => {
       items = items.filter((p) =>
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
-        ((p as any).sku || "").toLowerCase().includes(q)
+        (p.sku || "").toLowerCase().includes(q)
       );
     }
     return items;
@@ -105,8 +105,8 @@ const Admin = () => {
 
   const toggleActive = async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
-    const newVal = !(product as any).is_active;
-    await supabase.from("products").update({ is_active: newVal } as any).eq("id", product.id);
+    const newVal = !product.is_active;
+    await supabase.from("products").update({ is_active: newVal }).eq("id", product.id);
     fetchProducts();
   };
 
@@ -183,11 +183,11 @@ const Admin = () => {
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
-            <p className="text-2xl font-bold text-green-400">{products.filter((p) => (p as any).is_active !== false).length}</p>
+            <p className="text-2xl font-bold text-green-400">{products.filter((p) => p.is_active !== false).length}</p>
             <p className="text-xs text-muted-foreground">Ativos</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
-            <p className="text-2xl font-bold text-yellow-400">{products.filter((p) => (p as any).stock === 0).length}</p>
+            <p className="text-2xl font-bold text-yellow-400">{products.filter((p) => p.stock === 0).length}</p>
             <p className="text-xs text-muted-foreground">Sem estoque</p>
           </div>
           <div className="card-technical py-3 px-4 text-center">
@@ -209,9 +209,9 @@ const Admin = () => {
           <>
             <div className="grid gap-2">
               {paginated.map((product) => {
-                const isActive = (product as any).is_active !== false;
-                const price = (product as any).price;
-                const stock = (product as any).stock;
+    const isActive = product.is_active !== false;
+                const price = product.price;
+                const stock = product.stock;
                 return (
                   <div
                     key={product.id}
@@ -234,7 +234,7 @@ const Admin = () => {
                       <p className="font-semibold text-sm truncate">{product.name}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {product.brand} • {product.compatibility}
-                        {(product as any).sku ? ` • SKU: ${(product as any).sku}` : ""}
+                        {product.sku ? ` • SKU: ${product.sku}` : ""}
                       </p>
                     </div>
 
