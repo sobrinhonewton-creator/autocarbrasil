@@ -192,8 +192,9 @@ const ProductFormDialog = ({ open, onOpenChange, editingProduct, onSaved, onDele
 
       onOpenChange(false);
       onSaved();
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Erro ao salvar", description: err?.message || "Erro desconhecido" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ variant: "destructive", title: "Erro ao salvar", description: message });
     } finally {
       setSaving(false);
     }
